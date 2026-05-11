@@ -1,0 +1,7 @@
+{
+  "name": "Le Hub des Petits Génies",
+  "description": "Une application éducative et amusante pour les enfants avec des jeux d'IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

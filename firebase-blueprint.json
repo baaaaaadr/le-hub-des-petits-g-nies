@@ -1,0 +1,29 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile for the kids app",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string", "description": "Child's first name" },
+        "emojiAvatar": { "type": "string", "description": "Selected emoji avatar" },
+        "age": { "type": "number", "description": "Child's age" },
+        "gradeLevel": { "type": "string", "description": "School grade level" },
+        "totalScore": { "type": "number", "description": "Total accumulated score" },
+        "gamesPlayed": {
+          "type": "object",
+          "description": "Stats per game"
+        },
+        "timePlayedMinutes": { "type": "number", "description": "Total time played in minutes" }
+      },
+      "required": ["uid", "name", "emojiAvatar", "age", "gradeLevel", "totalScore", "gamesPlayed", "timePlayedMinutes"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles"
+    }
+  }
+}

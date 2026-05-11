@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isValidUser() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['uid', 'name', 'emojiAvatar', 'age', 'gradeLevel', 'totalScore', 'gamesPlayed', 'timePlayedMinutes']) &&
+             data.uid == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 30 &&
+             data.emojiAvatar is string && data.emojiAvatar.size() > 0 && data.emojiAvatar.size() <= 20 &&
+             data.age is number &&
+             data.gradeLevel is string &&
+             data.totalScore is number && data.totalScore >= 0 &&
+             data.gamesPlayed is map &&
+             data.timePlayedMinutes is number && data.timePlayedMinutes >= 0;
+    }
+
+    match /users/{userId} {
+      // Anyone authenticated can read the leaderboard
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && isValidUser();
+      allow update: if isOwner(userId) && isValidUser() && request.resource.data.uid == resource.data.uid;
+    }
+  }
+}
