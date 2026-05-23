@@ -15,6 +15,7 @@ export interface UserProfile {
     clock?: number;
     bubble?: number;
     maze?: number;
+    subtraction?: number;
   };
   timePlayedMinutes: number;
 }

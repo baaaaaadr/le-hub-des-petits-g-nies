@@ -11,6 +11,7 @@ import PolyglotGame from './components/games/PolyglotGame';
 import ClockGame from './components/games/ClockGame';
 import BubbleGame from './components/games/BubbleGame';
 import MazeGame from './components/games/MazeGame';
+import SubtractionGame from './components/games/SubtractionGame';
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -33,7 +34,8 @@ export default function App() {
       polyglot: 0,
       clock: 0,
       bubble: 0,
-      maze: 0
+      maze: 0,
+      subtraction: 0
     },
     timePlayedMinutes: 0
   };
@@ -111,6 +113,7 @@ export default function App() {
       {currentScreen === 'clock' && <ClockGame profile={profile} onBack={() => setCurrentScreen('hub')} onScoreUpdate={onScoreUpdate} />}
       {currentScreen === 'bubble' && <BubbleGame profile={profile} onBack={() => setCurrentScreen('hub')} onScoreUpdate={onScoreUpdate} />}
       {currentScreen === 'maze' && <MazeGame profile={profile} onBack={() => setCurrentScreen('hub')} onScoreUpdate={onScoreUpdate} />}
+      {currentScreen === 'subtraction' && <SubtractionGame profile={profile} onBack={() => setCurrentScreen('hub')} onScoreUpdate={onScoreUpdate} />}
     </div>
   );
 }

@@ -75,6 +75,14 @@ const GAMES = [
     emoji: '🤖',
     image: 'https://picsum.photos/seed/maze/600/400?blur=1',
     color: 'bg-violet-500',
+  },
+  {
+    id: 'subtraction',
+    title: 'Le Champion des Soustractions',
+    desc: 'سُؤَالٌ وَجَوَابٌ فِي عِلْمِ الطَّرْحِ 🧮',
+    emoji: '🍎',
+    image: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?q=80&w=600&auto=format&fit=crop&blur=1',
+    color: 'bg-gradient-to-r from-orange-500 to-amber-500',
   }
 ];
 
