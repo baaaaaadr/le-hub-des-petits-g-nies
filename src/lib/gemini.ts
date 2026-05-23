@@ -1,6 +1,25 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = (): GoogleGenAI => {
+  if (!aiInstance) {
+    let apiKey = '';
+    try {
+      apiKey = (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) || '';
+    } catch (e) {
+      // ignore
+    }
+    aiInstance = new GoogleGenAI({ apiKey: apiKey || 'NO_KEY_PROVIDED' });
+  }
+  return aiInstance;
+};
+
+const ai = {
+  get models() {
+    return getAI().models;
+  }
+};
 
 export const generateDetectiveQuestion = async (gradeLevel: string, language: 'fr' | 'ar' = 'fr', exclude: string[] = []) => {
   let prompt = '';
