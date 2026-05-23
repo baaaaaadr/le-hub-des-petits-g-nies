@@ -13,14 +13,16 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [usedWords, setUsedWords] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState<string>(profile.gradeLevel || 'CP');
+  const [language, setLanguage] = useState<'fr' | 'ar'>('fr');
 
-  const loadQuestion = async (customDifficulty?: string) => {
+  const loadQuestion = async (customDifficulty?: string, customLanguage?: 'fr' | 'ar') => {
     setLoading(true);
     const targetDifficulty = customDifficulty || difficulty;
+    const targetLanguage = customLanguage || language;
     setSelected(null);
     setIsCorrect(null);
     try {
-      const q = await generateDetectiveQuestion(targetDifficulty, usedWords);
+      const q = await generateDetectiveQuestion(targetDifficulty, targetLanguage, usedWords);
       setQuestion(q);
       // Shuffle options
       const allOptions = [q.correctAnswer, ...q.wrongAnswers].sort(() => Math.random() - 0.5);
@@ -38,7 +40,13 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
   const handleDifficultyChange = (newDiff: string) => {
     if (loading) return;
     setDifficulty(newDiff);
-    loadQuestion(newDiff);
+    loadQuestion(newDiff, language);
+  };
+
+  const handleLanguageChange = (newLang: 'fr' | 'ar') => {
+    if (loading) return;
+    setLanguage(newLang);
+    loadQuestion(difficulty, newLang);
   };
 
   useEffect(() => {
@@ -53,13 +61,37 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
     if (option === question.correctAnswer) {
       setIsCorrect(true);
       playSuccessSound();
-      playVoice(question.sentence.replace('____', option));
+      if (language === 'ar') {
+        playVoice("أَحْسَنْتِ ! لَقَدْ وَجَدْتِ الْكَلِمَةَ الصَّحِيحَةَ.", 'ar');
+        setTimeout(() => {
+          playVoice(question.sentence.replace('____', option), 'ar');
+        }, 2200);
+      } else {
+        playVoice(question.sentence.replace('____', option), 'fr');
+      }
       
       // Update score locally
       onScoreUpdate(10, 'detective');
     } else {
       setIsCorrect(false);
       playErrorSound();
+      if (language === 'ar') {
+        playVoice("حَاوِلِي مَرَّةً أُخْرَى !", 'ar');
+      } else {
+        playVoice("Essaie encore !", 'fr');
+      }
+    }
+  };
+
+  const getLevelLabel = (level: string) => {
+    if (language === 'ar') {
+      if (level === 'CP') return 'Très Facile (N1)';
+      if (level === 'CM1') return 'Facile (N2)';
+      return 'Moyen (N3)';
+    } else {
+      if (level === 'CP') return 'Niveau 1 (CP)';
+      if (level === 'CM1') return 'Niveau 2 (CM1)';
+      return 'Niveau 3 (Collège)';
     }
   };
 
@@ -75,6 +107,35 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
       </header>
 
       <div className="bg-white rounded-[32px] shadow-sm p-8 card-tactile text-center">
+        {/* Language Selection */}
+        <div className="flex justify-center gap-4 mb-6">
+          <button 
+            type="button"
+            onClick={() => handleLanguageChange('fr')}
+            disabled={loading}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${
+              language === 'fr' 
+                ? 'bg-sky-50 border-sky-300 text-sky-700 shadow-sm' 
+                : 'bg-white border-slate-100 text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <span>🇫🇷 Français</span>
+          </button>
+          <button 
+            type="button"
+            onClick={() => handleLanguageChange('ar')}
+            disabled={loading}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border-2 ${
+              language === 'ar' 
+                ? 'bg-amber-50 border-amber-300 text-amber-700 shadow-sm' 
+                : 'bg-white border-slate-100 text-slate-400 hover:text-slate-600'
+            }`}
+          >
+            <span>🇲🇦 العربية</span>
+          </button>
+        </div>
+
+        {/* Difficulty Selection */}
         <div className="flex justify-center gap-2 bg-slate-50 p-1.5 rounded-2xl mb-6">
           {["CP", "CM1", "1ère Année Collège"].map((level) => (
             <button
@@ -87,33 +148,47 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
                   : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              {level === "CP" ? "Niveau 1" : level === "CM1" ? "Niveau 2" : "Niveau 3"}
+              {getLevelLabel(level)}
             </button>
           ))}
         </div>
+        
         <div className="text-6xl mb-6">🕵️‍♂️</div>
-        <h2 className="text-3xl font-black text-emerald-600 mb-8 text-tight-heading">Le Détective des Mots</h2>
+        <h2 className={`font-black text-emerald-600 mb-8 text-tight-heading ${language === 'ar' ? 'text-4xl md:text-5xl font-sans leading-normal' : 'text-3xl'}`}>
+          {language === 'ar' ? 'مُحَقِّقُ الْكَلِمَاتِ' : 'Le Détective des Mots'}
+        </h2>
 
         {loading ? (
           <div className="animate-pulse flex flex-col items-center gap-4 py-12">
             <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-emerald-500 font-bold uppercase tracking-wider text-sm">L'IA prépare une enquête...</p>
+            <p className="text-emerald-500 font-bold uppercase tracking-wider text-sm">
+              {language === 'ar' ? 'جَارٍ تَحْضِيرُ اللُّغْزِ...' : "L'IA prépare une enquête..."}
+            </p>
           </div>
         ) : (
           <>
-            <div className="bg-slate-50 rounded-3xl p-8 mb-8 border-2 border-slate-100 relative">
+            <div className={`bg-slate-50 rounded-3xl p-8 mb-8 border-2 border-slate-100 relative ${language === 'ar' ? 'pt-12' : ''}`}>
               <button 
-                onClick={() => playVoice(question.sentence)}
-                className="absolute top-4 right-4 p-3 bg-sky-100 text-sky-500 rounded-2xl btn-tactile"
+                onClick={() => playVoice(question.sentence, language)}
+                className={`absolute top-4 p-3 bg-sky-100 text-sky-500 rounded-2xl btn-tactile z-10 ${
+                  language === 'ar' ? 'left-4' : 'right-4'
+                }`}
               >
                 <Volume2 size={24} />
               </button>
-              <p className="text-2xl md:text-4xl font-bold text-slate-700 leading-relaxed mt-4">
+              <p 
+                className={`font-black text-slate-700 ${
+                  language === 'ar' 
+                    ? 'text-right px-12 font-sans text-3xl md:text-5xl leading-[1.8] md:leading-[2]' 
+                    : 'text-center text-2xl md:text-4xl leading-relaxed mt-4 font-bold'
+                }`}
+                dir={language === 'ar' ? 'rtl' : 'ltr'}
+              >
                 {question.sentence}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-2 gap-4 mb-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
               {options.map((opt, i) => {
                 let btnClass = "bg-white border-2 border-slate-200 text-slate-600 hover:bg-slate-50";
                 if (selected === opt) {
@@ -129,7 +204,11 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
                     whileTap={!selected ? { scale: 0.98 } : {}}
                     onClick={() => handleSelect(opt)}
                     disabled={!!selected}
-                    className={`p-6 rounded-2xl text-xl md:text-2xl font-black shadow-sm transition-colors ${btnClass}`}
+                    className={`rounded-2xl font-black shadow-sm transition-all ${btnClass} ${
+                      language === 'ar' 
+                        ? 'p-8 font-sans text-3xl md:text-4xl leading-relaxed' 
+                        : 'p-6 text-xl md:text-2xl'
+                    }`}
                   >
                     {opt}
                   </motion.button>
@@ -141,10 +220,10 @@ export default function DetectiveGame({ profile, onBack, onScoreUpdate }: { prof
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                onClick={loadQuestion}
+                onClick={() => loadQuestion()}
                 className="bg-warning-400 text-warning-900 font-black text-xl py-4 px-8 rounded-2xl btn-tactile w-full md:w-auto mx-auto flex items-center justify-center gap-2"
               >
-                Nouvelle Enquête 🔍
+                {language === 'ar' ? 'لُغْزٌ جَدِيدٌ 🔍' : 'Nouvelle Enquête 🔍'}
               </motion.button>
             )}
           </>

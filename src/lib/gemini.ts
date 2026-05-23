@@ -1,22 +1,40 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-//const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-export const generateDetectiveQuestion = async (gradeLevel: string, exclude: string[] = []) => {
-  const prompt = `
-    Tu es un professeur pour enfants. Crée une question pour le jeu "Le Détective des Mots" pour un enfant de niveau ${gradeLevel} (système marocain).
-    
-    Règles pour le niveau :
-    - CP (~6 ans) : L'enfant est très avancé et lit déjà des livres entiers. Ne te limite pas à des phrases basiques comme "le chat boit du lait". Utilise un vocabulaire riche, des adjectifs descriptifs et des structures de phrases complètes. Le mot manquant doit être un nom, un verbe ou un adjectif intéressant (ex: "étincelant", "bondir", "mystérieux").
-    - CM1 (~9-10 ans) : Grammaire intermédiaire, vocabulaire plus riche, expressions idiomatiques simples.
-    - 1ère Année Collège (~12-13 ans) : Vocabulaire avancé, logique abstraite, nuances de sens.
+export const generateDetectiveQuestion = async (gradeLevel: string, language: 'fr' | 'ar' = 'fr', exclude: string[] = []) => {
+  let prompt = '';
+  if (language === 'ar') {
+    prompt = `
+      Tu es un professeur d'arabe pour enfants. Crée une question pour le jeu "Le Détective des Mots" (dans la version langue arabe) pour un enfant de niveau ${gradeLevel}.
+      
+      IMPORTANT : La phrase générée ainsi que toutes les réponses doivent être rédigées entièrement en Arabe (avec les voyelles/diacritiques - Harakat - pour faciliter la lecture pour l'enfant).
+      
+      Règles pour les niveaux de difficulté en arabe (spécifiquement adaptés et décalés vers la facilité car l'enfant est moins avancé en arabe qu'en français) :
+      - CP (~niveau 1 / Trés Facile) : Très, très facile. Des phrases très simples de 3-4 mots seulement avec des mots et concepts très familiers pour un petit enfant débutant en arabe. Le mot manquant doit être extrêmement simple (ex: "الْقِطُّ يَشْرَبُ ____.", mot manquant: "الْحَلِيبَ", ou "أَنَا أُحِبُّ ____.", mot manquant: "أُمِّي").
+      - CM1 (~niveau 2 / Facile) : Facile. Des phrases simples et directes de 4-6 mots de vocabulaire du quotidien, d'animaux ou d'objets de l'école (ex: "الْوَلَدُ يَذْهَبُ إِلَى ____.", mot manquant: "الْمَدْرَسَةِ").
+      - 1ère Année Collège (~niveau 3 / Moyen) : Difficulté moyenne standard. Phrases de longueur moyenne (5-8 mots) utilisant des verbes, noms ou adjectifs courants avec des structures grammaticales élémentaires de base.
+      
+      ${exclude.length > 0 ? `IMPORTANT : Ne génère PAS de questions portant sur les mots arabes suivants (déjà utilisés) : ${exclude.join(', ')}.` : ''}
+      
+      Génère une courte phrase en arabe avec un mot manquant représenté par "____".
+      Fournis la bonne réponse (correctAnswer) en arabe et 3 mauvaises réponses (wrongAnswers) plausibles en arabe.
+    `;
+  } else {
+    prompt = `
+      Tu es un professeur pour enfants. Crée une question pour le jeu "Le Détective des Mots" pour un enfant de niveau ${gradeLevel} (système marocain).
+      
+      Règles pour le niveau :
+      - CP (~6 ans) : L'enfant est très avancé et lit déjà des livres entiers. Ne te limite pas à des phrases basiques comme "le chat boit du lait". Utilise un vocabulaire riche, des adjectifs descriptifs et des structures de phrases complètes. Le mot manquant doit être un nom, un verbe ou un adjectif intéressant (ex: "étincelant", "bondir", "mystérieux").
+      - CM1 (~9-10 ans) : Grammaire intermédiaire, vocabulaire plus riche, expressions idiomatiques simples.
+      - 1ère Année Collège (~12-13 ans) : Vocabulaire avancé, logique abstraite, nuances de sens.
 
-    ${exclude.length > 0 ? `IMPORTANT : Ne génère PAS de questions portant sur les mots suivants (déjà utilisés) : ${exclude.join(', ')}.` : ''}
+      ${exclude.length > 0 ? `IMPORTANT : Ne génère PAS de questions portant sur les mots suivants (déjà utilisés) : ${exclude.join(', ')}.` : ''}
 
-    Génère une courte phrase en français avec un mot manquant représenté par "____".
-    Fournis la bonne réponse et 3 mauvaises réponses.
-  `;
+      Génère une courte phrase en français avec un mot manquant représenté par "____".
+      Fournis la bonne réponse (correctAnswer) et 3 mauvaises réponses (wrongAnswers).
+    `;
+  }
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
